@@ -8,7 +8,8 @@ import string
 import unicodedata
 from datetime import datetime
 
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import requests
 
 # --- 設定 ---
@@ -17,7 +18,7 @@ ARTICLES_DIR = "articles"
 # --- Gemini API設定 ---
 try:
     GEMINI_API_KEY = os.environ["GEMINI_API_KEY"]
-    genai.configure(api_key=GEMINI_API_KEY)
+    client = genai.Client(api_key=GEMINI_API_KEY)
 except KeyError:
     raise RuntimeError("環境変数 `GEMINI_API_KEY` が設定されていません。")
 
@@ -45,7 +46,6 @@ def search_topic():
 
 def create_article(topic):
     """Gemini APIを使って記事を生成する"""
-    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
     あなたは優秀なテクニカルライターです。
     以下のトピックについて、Zenn.devに投稿するための高品質な技術解説記事を日本語のMarkdown形式で生成してください。
@@ -61,7 +61,10 @@ def create_article(topic):
 
     それでは、記事の生成を開始してください。
     """
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     return response.text
 
 def save_article(content):
